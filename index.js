@@ -1,21 +1,40 @@
-const { default: axios } = require("axios");
 const { chromium } = require("playwright");
+const { huddleTitle } = require("./selectors");
 
 async function main() {
-  const browser = await chromium.launch({
-    headless: false, // turn off headless mode
+  const browser = await chromium.launchPersistentContext("/tmp/test-slackbot", {
+    headless: false,
+    args: ["--start-maximized"],
+    viewport: null,
   });
+  console.log("Browser launched!");
   const page = await browser.newPage();
 
-  await page.goto("https://github.com/davidsondefaria/oficina-dev-5/blob/main/README.md");
+  console.log("Navigating to slack.com...");
 
-  const text = await page.locator(".markdown-body > p").textContent();
+  // logar com email usando o link abaixo antes de tentar pegar a transcrição
+  // await page.goto("https://slack.com/signin");
 
-  console.log('Extracted text:', text);
+  await page.goto("https://app.slack.com/huddle/T02HDPYV6J3/C02HDPZ0W6B");
 
-  await axios.post("https://9da6-2804-14d-78b1-8448-26e3-9d9b-ae51-774b.ngrok-free.app/webhook-test/ia", { text });
+  const popupPromise = page.waitForEvent("popup", { timeout: 500000 });
+  const popup = await popupPromise;
 
-  await browser.close();
+  const txt = popup.locator(huddleTitle);
+
+  console.log("Huddle title: ", await txt.textContent());
+
+  while (true) {
+    const msgLocator = popup.locator(".p-huddle_event_log__transcription");
+    console.log("Message visible");
+
+    try {
+      const msg = await msgLocator.textContent({ timeout: 5000000 });
+      console.log("Transcription: ", msg);
+    } catch (error) {
+      console.log(error);
+    }
+  }
 }
 
 main();
