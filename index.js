@@ -1,5 +1,5 @@
 const { chromium } = require("playwright");
-const { huddleTitle } = require("./selectors");
+// const { huddleTitle } = require("./selectors");
 
 async function main() {
   const browser = await chromium.launchPersistentContext("/tmp/test-slackbot", {
@@ -17,7 +17,7 @@ async function main() {
 
   await page.goto("https://app.slack.com/client/T09137B6UNN/D0912TB66NQ");
 
-  await page.getByLabel("Start huddle with davidsondefaria").click();
+  await page.getByLabel("Start huddle with Davidson ZRP").click();
 
   console.log("started huddle");
 
@@ -29,15 +29,16 @@ async function main() {
 
   const popup = await popupPromise;
 
-  const txt = popup.locator(huddleTitle);
+  // const txt = popup.locator(huddleTitle);
 
-  console.log("Huddle title: ", await txt.textContent());
+  // console.log("Huddle title: ", await txt.textContent());
 
   let transcriptionActivated = false;
 
+  const messages = [];
+
   while (true) {
-    const msgLocator = popup.locator(".p-huddle_event_log__transcription");
-    console.log("Message visible");
+    // usar uma api do navegador para escutar quando o elemento mudar: mutation observer
 
     if (!transcriptionActivated) {
       await popup.getByLabel("Settings").click();
@@ -49,20 +50,27 @@ async function main() {
       await popup.getByText("Side-by-side").click();
       console.log("Side-by-side clicked");
 
-      await popup.getByText("Change huddle language").click();
-      console.log("Change huddle language clicked");
+      // await popup.getByText("Change huddle language").click();
+      // console.log("Change huddle language clicked");
 
-      await popup.getByText("Português (Brasil)").click();
-      console.log("Language changed to Português (Brasil)");
+      // await popup.getByText("Português (Brasil)").click();
+      // console.log("Language changed to Português (Brasil)");
 
-      await popup.getByText("Continue").click();
-      console.log("Continue clicked");
+      // await popup.getByText("Continue").click();
+      // console.log("Continue clicked");
       transcriptionActivated = true;
     }
 
     try {
-      const msg = await msgLocator.textContent({ timeout: 5000000 });
-      console.log("Transcription: ", msg);
+      const msgName = popup.locator(
+        ".c-virtual_list__item[tabindex='0'] .p-huddle_event_log__member_name"
+      );
+      console.log("User: ", await msgName.textContent());
+
+      const msgText = popup.locator(
+        ".c-virtual_list__item[tabindex='0'] .p-huddle_event_log__transcription"
+      );
+      console.log("Message: ", await msgText.textContent());
     } catch (error) {
       console.log(error);
     }
