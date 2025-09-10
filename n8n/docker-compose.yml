@@ -1,0 +1,67 @@
+version: "3.8"
+
+volumes:
+  core-gd-n8n-data:
+  core-gd-n8n-db:
+  core-gd-n8n-redis:
+  core-gd-n8n-history:
+  core-gd-n8n-modules:
+
+services:
+  db:
+    hostname: db
+    image: postgres:bullseye
+    environment:
+      POSTGRES_USER: 'postgres'
+      POSTGRES_DB: 'n8n'
+      POSTGRES_PASSWORD: 'n8n'
+      POSTGRES_HOST_AUTH_METHOD: 'trust'
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready" ]
+      interval: 1s
+      timeout: 3s
+      retries: 30
+    volumes:
+      - core-gd-n8n-db:/var/lib/postgresql/data
+
+  mailcatcher:
+    hostname: mailcatcher
+    image: schickling/mailcatcher
+    ports: ['1080:1080']
+
+  redis:
+    hostname: redis
+    image: redis:bullseye
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 1s
+      timeout: 3s
+      retries: 30
+    volumes:
+      - core-gd-n8n-redis:/data
+
+  # Runs the development container
+  app:
+    hostname: app
+    working_dir: /home/node/.n8n
+    tty: true
+    stdin_open: true
+    env_file:
+      - .env
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 5678:5678
+    volumes:
+      - core-gd-n8n-data:/home/node/.n8n
+      - ./src:/home/node/src
+      - ./package.json:/home/node/package.json
+    tmpfs:
+      - /tmp
+    depends_on:
+      - db
+      - mailcatcher
+      - redis
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
