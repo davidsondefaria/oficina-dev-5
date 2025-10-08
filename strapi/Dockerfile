@@ -1,74 +1,20 @@
-FROM node:18-slim as base
+FROM node:22-alpine
+# Installing libvips-dev for sharp Compatibility
 
-WORKDIR /home/node
+RUN apk update && apk add --no-cache build-base gcc autoconf automake zlib-dev libpng-dev nasm bash vips-dev git
+ARG NODE_ENV=development
+ENV NODE_ENV=${NODE_ENV}
 
-EXPOSE 1337
+WORKDIR /opt/
+COPY package.json yarn.lock ./
+RUN yarn global add node-gyp
+RUN yarn config set network-timeout 600000 -g && yarn install
+ENV PATH=/opt/node_modules/.bin:$PATH
 
-# Chromium dependencies
-RUN apt-get update && apt-get install -y \
-  gconf-service \
-  libgbm-dev \
-  libasound2 \
-  libatk1.0-0 \
-  libc6 \
-  libcairo2 \
-  libcups2 \
-  libdbus-1-3 \
-  libexpat1 \
-  libfontconfig1 \
-  libgcc1 \
-  libgconf-2-4 \
-  libgdk-pixbuf2.0-0 \
-  libglib2.0-0 \
-  libgtk-3-0 \
-  libnspr4 \
-  libpango-1.0-0 \
-  libpangocairo-1.0-0 \
-  libstdc++6 \
-  libx11-6 \
-  libx11-xcb1 \
-  libxcb1 \
-  libxcomposite1 \
-  libxcursor1 \
-  libxdamage1 \
-  libxext6 \
-  libxfixes3 \
-  libxi6 \
-  libxrandr2 \
-  libxrender1 \
-  libxss1 \
-  libxtst6 \
-  ca-certificates \
-  fonts-liberation \
-  libappindicator1 \
-  libnss3 \
-  lsb-release \
-  xdg-utils \
-  wget
-
-
+WORKDIR /opt/app
 COPY . .
-
-###########
-### DEV ###
-###########
-
-FROM base as dev
-
-RUN yarn --immutable --prefer-offline
-
-CMD [ "yarn", "develop" ]
-
-#############
-### CLOUD ###
-#############
-
-FROM base as cloud
-
-RUN yarn build:nettu
-
-RUN yarn --immutable --prefer-offline --production
-
-RUN yarn build
-
-CMD [ "bash", "-c", "yarn cs:import -y && yarn start" ]
+RUN chown -R node:node /opt/app
+USER node
+RUN ["yarn", "build"]
+EXPOSE 1337
+CMD ["yarn", "develop"]

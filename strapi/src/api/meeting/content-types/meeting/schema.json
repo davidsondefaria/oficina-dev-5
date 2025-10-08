@@ -1,0 +1,32 @@
+{
+  "kind": "collectionType",
+  "collectionName": "meetings",
+  "info": {
+    "singularName": "meeting",
+    "pluralName": "meetings",
+    "displayName": "Meeting"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "name": {
+      "type": "string"
+    },
+    "anotations": {
+      "type": "richtext"
+    },
+    "project": {
+      "type": "enumeration",
+      "enum": [
+        "Senior Concierge",
+        "Flux",
+        "Movidas"
+      ]
+    },
+    "meetingTime": {
+      "type": "datetime"
+    }
+  }
+}
