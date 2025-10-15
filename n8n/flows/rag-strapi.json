@@ -2,7 +2,7 @@
   "nodes": [
     {
       "parameters": {
-        "model": "llama3.2:3b",
+        "model": "qwen3:14b",
         "options": {}
       },
       "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
@@ -54,19 +54,6 @@
       "typeVersion": 1.1
     },
     {
-      "parameters": {
-        "options": {}
-      },
-      "id": "2eacb303-e58b-4960-9a60-8d4dfb3cee9c",
-      "name": "AI Agent",
-      "type": "@n8n/n8n-nodes-langchain.agent",
-      "position": [
-        752,
-        -128
-      ],
-      "typeVersion": 2
-    },
-    {
       "parameters": {},
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
@@ -79,7 +66,7 @@
     },
     {
       "parameters": {
-        "url": "http://192.168.0.150:1337/api/meetings",
+        "url": "http://192.168.0.180:1337/api/meetings",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpBearerAuth",
         "options": {}
@@ -130,8 +117,6 @@
     },
     {
       "parameters": {
-        "jsonMode": "expressionData",
-        "jsonData": "={{ $json.text }}",
         "textSplittingMode": "custom",
         "options": {}
       },
@@ -166,8 +151,8 @@
       "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
       "typeVersion": 1,
       "position": [
-        160,
-        416
+        -48,
+        560
       ],
       "id": "44a4ad8e-bb4e-48e4-9622-022c4f71878a",
       "name": "Recursive Character Text Splitter"
@@ -208,13 +193,17 @@
       "name": "Answer questions with a vector store",
       "type": "@n8n/n8n-nodes-langchain.toolVectorStore",
       "position": [
-        960,
-        96
+        1136,
+        80
       ],
-      "typeVersion": 1
+      "typeVersion": 1,
+      "notesInFlow": true
     },
     {
       "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolName": "knowledge_base",
+        "toolDescription": "Use this tool when asked questions from the custom knowledge base.",
         "tableName": "embeddings",
         "options": {}
       },
@@ -235,7 +224,7 @@
     },
     {
       "parameters": {
-        "model": "llama3.2:3b",
+        "model": "qwen3:14b",
         "options": {}
       },
       "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
@@ -292,6 +281,21 @@
           "name": "Ollama account"
         }
       }
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "You are a helpful assistant\n\n# Rules\nOnly retrieve information from the knowledge base"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        736,
+        -128
+      ],
+      "id": "47f8a3d3-7137-4f51-b7c7-3d75c274d532",
+      "name": "AI Agent"
     }
   ],
   "connections": {
@@ -414,21 +418,18 @@
     },
     "Answer questions with a vector store": {
       "ai_tool": [
-        [
-          {
-            "node": "AI Agent",
-            "type": "ai_tool",
-            "index": 0
-          }
-        ]
+        []
       ]
     },
     "Postgres PGVector Store1": {
       "ai_vectorStore": [
+        []
+      ],
+      "ai_tool": [
         [
           {
-            "node": "Answer questions with a vector store",
-            "type": "ai_vectorStore",
+            "node": "AI Agent",
+            "type": "ai_tool",
             "index": 0
           }
         ]
